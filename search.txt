@@ -1,0 +1,238 @@
+#ifndef WORDS_H
+#define WORDS_H
+
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <ctype.h>
+#include <cstring> // string.h
+#include <vector>
+#include <cstdlib>
+
+class Words
+{
+public:
+    Words();
+    ~Words();
+    unsigned int str_size()
+    {
+        return str.size();
+    }
+    void quick_sort(int left, int right);
+    void bubble_sort();
+    void insertion_sort();
+    void search_word(std::string word);
+    int bin_search(int left, int right, std::string word);
+    void append(std::string suffix);
+    friend void save_data(const Words &str, const char* file_name = "data.txt");
+    friend std::ostream& operator <<(std::ostream& out, const Words& str);
+
+private:
+    std::vector<std::string>str;
+
+};
+
+#endif // WORDS_H
+
+// WORDS.CPP
+
+
+#include <iostream>
+#include "Words.h"
+using namespace std;
+
+Words::Words()
+// member inicialization
+    :str(0)
+{
+
+
+}
+
+Words::~Words()
+{
+    str.clear();
+}
+
+// function to print out objects' data
+std::ostream& operator<<(std::ostream& out, const Words& str)
+{
+    for(unsigned int i = 0; i < str.str.size(); i++)
+    {
+        out << str.str[i] << " ";
+    }
+    return out;
+}
+
+void Words::quick_sort(int left, int right)
+{
+    int i = left, j = right;
+    string mid = this->str[(left + right) / 2];
+
+    // partition
+    while (i <= j)
+    {
+        while (this->str[i] < mid)
+            i++;
+        while (this->str[j] > mid)
+            j--;
+        if (i <= j)
+        {
+            std::swap(this->str[i], this->str[j]);
+            i++;
+            j--;
+        }
+    }
+
+    // recursion
+    if (left < j)
+        quick_sort(left, j);
+    if (i < right)
+        quick_sort(i, right);
+}
+
+
+// append vector
+
+void Words::append(std::string suffix)
+{
+
+    str.push_back(suffix);
+
+}
+
+void Words::bubble_sort()
+{
+    bool swapped = false;
+    for (unsigned int i = 0; i < str.size() - 1; i++)
+    {
+        for (unsigned int j = 0; j < str.size() - i - 1; j++)
+        {
+            if (str[j] > str[j+1])
+            {
+                swap(str[j], str[j+1]);
+                swapped = true;
+            }
+        }
+        if(swapped == false)
+            break; // vector already sorted
+    }
+
+}
+
+void Words::insertion_sort()
+{
+    int i, j;
+    string temp;
+
+    for(i = 1; i < str.size(); i++)
+    {
+        temp = str[i];
+        j = i - 1;
+        while (j >= 0 && str[j] > temp)
+        {
+            str[j+1] = str[j];
+            j = j - 1;
+        }
+        str[j+1] = temp;
+    }
+
+}
+
+void Words::search_word(string word)
+{
+    bool found = false;
+    //unsigned int capacity = 0, counter = 0;
+    //int positions[capacity];
+    for(unsigned int i = 0; i < str.size(); i++)
+    {
+        if(str[i] == word)
+        {
+            //positions[counter] = i;
+            //counter++, capacity++;
+            cout << "found '" << word << "' at position " << i + 1 << endl;
+            found = true;
+        }
+
+    }
+    if(found == false)
+    {
+        cout << "No matches found" << endl;
+    }
+}
+
+int Words::bin_search(int l, int r, string word)
+{
+   if (r >= l)
+   {
+       // middle node
+        int mid = l + (r - l)/2;
+
+        if (str[mid] == word)
+            return mid;
+        if (str[mid] > word)
+            return bin_search(l, mid-1, word);
+
+        // right subarray
+        return bin_search(mid+1, r, word);
+   }
+
+   // no word found
+   return -1;
+}
+
+
+// MAIN.CPP
+
+#include "Words.h"
+using namespace std;
+
+                        /*!
+    Program asks the user to enter sentences or words
+    which  will  be  sorted  in lexicographical order
+                        */
+
+int main()
+{
+    Words word_object;
+    string str;
+    cout << "Enter any word or sentence, -1 to quit" << endl;
+    while(true)
+    {
+        cin >> str;
+        // end loop on exit
+        if(str[0] == '-' && str[1] == '1')
+            break;
+
+        word_object.append(str);
+    }
+
+    //word_object.bubble_sort();
+    //word_object.insertion_sort();
+    word_object.quick_sort(0, word_object.str_size() - 1);
+    system("CLS");
+
+    string find_word;
+    cout << "Enter word to search: ";
+    cin >> find_word;
+    cout << word_object << endl;
+    //word_object.search_word(find_word);
+    int pos = word_object.bin_search(0, word_object.str_size()-1, find_word);
+    cout << "Word '" << find_word << "' is at position " << pos + 1 << endl;
+
+    save_data(word_object);
+
+    return 0;
+}
+
+
+void save_data(const Words &str, const char* file_name)
+{
+    ofstream file(file_name, std::ofstream::out);
+    for(unsigned int i = 0; i < str.str.size(); i++)
+    {
+        file << str.str[i] << " ";
+    }
+    file.close();
+}
+

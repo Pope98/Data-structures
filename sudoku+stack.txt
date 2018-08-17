@@ -1,0 +1,242 @@
+// stack.h
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+struct StackNode
+{
+	int data;
+	struct StackNode* next;
+};
+
+struct StackNode* newNode(int data);
+
+int isEmpty(struct StackNode *root);
+
+void push(struct StackNode** root, int data);
+
+int pop(struct StackNode** root);
+
+int peek(struct StackNode* root);
+
+int size(struct StackNode* root);
+
+void insert(struct StackNode* root, int n, int data);
+
+int getElement(struct StackNode *q, int n);
+
+
+// Stack.c
+
+#include "stack.h"
+
+struct StackNode* newNode(int data)
+{
+	struct StackNode* stackNode = (struct StackNode*) malloc(sizeof(struct StackNode));
+	stackNode->data = data;
+	stackNode->next = NULL;
+	return stackNode;
+}
+
+int isEmpty(struct StackNode *root)
+{
+	return !root;
+}
+ 
+void push(struct StackNode** root, int data)
+{
+	struct StackNode* stackNode = newNode(data);
+	stackNode->next = *root;
+	*root = stackNode;
+	//printf("%d pushed to stack\n", data);
+}
+ 
+int pop(struct StackNode** root)
+{
+	if (isEmpty(*root))
+		return INT_MIN;
+	struct StackNode* temp = *root;
+	*root = (*root)->next;
+	int popped = temp->data;
+	free(temp);
+	return popped;
+}
+ 
+int peek(struct StackNode* root)
+{
+	if (isEmpty(root))
+		return INT_MIN;
+	return root->data;
+}
+
+int size(struct StackNode* root)
+{
+  struct StackNode* cur = root;
+  int size = 0;
+
+  while (cur != NULL)
+  {
+    ++size;
+    cur = cur->next;
+  }
+
+  return size;
+}
+
+void insert(struct StackNode* root, int n, int data){
+	struct StackNode *newnode = newNode(data);
+	struct StackNode *temp = root;
+	struct StackNode *nextNode = root;
+
+	for (int i = 0; i < n; i++)
+	{
+			temp = temp->next;
+	}
+
+	nextNode = temp->next;
+	temp->next = newnode;
+	newnode->next = nextNode;
+}
+
+int getElement(struct StackNode *q, int n)
+{
+    if(n > size(q))
+		{
+        printf("the size of the queue is %d, you can't search for a number in position %d\n", size(q), n);
+        return -1;
+    }
+    struct StackNode *temp = q;
+    for (int i = 0; i < n; i++){
+        temp = temp->next;
+    }
+    return temp->data;
+}
+
+// main.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "stack.h"
+
+#define N 9
+struct StackNode;
+typedef struct StackNode stack;
+
+// tikrina, ar eiluteje yra paduota reiksme 'num'
+int row_exists(int grid[N][N], int row, int num){
+	for (int col = 0; col < 9; col++) {
+		if (grid[row][col] == num) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+// tikrina, ar stulpelyje yra paduota reiksme 'num'
+int col_exists(int grid[N][N], int col, int num) {
+	for (int row = 0; row < 9; row++) {
+		if (grid[row][col] == num) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
+// tikrina, ar pasirinktoje 'dezuteje' (startRow, startCol) yra reiksme 'num'
+int box_exists(int grid[N][N], int startRow, int startCol, int num) {
+	for (int row = 0; row < 3; row++) {
+		for (int col = 0; col < 3; col++) {
+			if (grid[row + startRow][col + startCol] == num) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+// patikrina, ar galima irasyti reiksme i [row][col] pozicija
+int is_valid(int grid[N][N], int row, int col, int num) {
+	return !row_exists(grid, row, num)
+            && !col_exists(grid, col, num)
+			&& !box_exists(grid, row - (row % 3), col - (col %3), num);
+}
+
+// randa, ar laukelis yra tuscias
+int find_unassigned(int grid[N][N], int *row, int *col) {
+	for (*row = 0; *row < N; (*row)++) {
+		for (*col = 0; *col < N; (*col)++) {
+			if (grid[*row][*col] == 0) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+int solve(int grid[N][N]) {
+
+    struct StackNode* root = NULL;
+	int row = 0;
+	int col = 0;
+
+	if (!find_unassigned(grid, &row, &col)){
+		return 1;
+	}
+
+	push(&root, 8);
+	push(&root, 7);
+	push(&root, 6);
+	push(&root, 5);
+	push(&root, 4);
+	push(&root, 3);
+	push(&root, 2);
+	push(&root, 1);
+	push(&root, 0);
+	for (int num = pop(&root); num <= N; num++ ) {
+
+		if (is_valid(grid, row, col, num)) {
+			grid[row][col] = num;
+
+			if (solve(grid)) {
+				return 1;
+			}
+
+			grid[row][col] = 0;
+		}
+	}
+
+	return 0;
+}
+
+void print_grid(int grid[N][N]) {
+	for (int row = 0; row < N; row++) {
+		for (int col = 0; col < N; col++) {
+			printf("%2d", grid[row][col]);
+		}
+		printf("\n");
+	}
+}
+
+int main() {
+
+    struct StackNode* root = NULL;
+	int grid[N][N] = {{0,0,0, 0,0,3, 2,9,0},
+                     {0,8,6, 5,0,0, 0,0,0},
+                     {0,2,0, 0,0,1, 0,0,0},
+                     {0,0,3, 7,0,5, 1,0,0},
+                     {9,0,0, 0,0,0, 0,0,8},
+                     {0,0,2, 9,0,8, 3,0,0},
+                     {0,0,0, 4,0,0, 0,8,0},
+                     {0,4,7, 1,0,0, 0,0,0}};
+
+
+
+	if (solve(grid)) {
+		print_grid(grid);
+	} else {
+		printf("Sprendiniu nera.\n");
+	}
+
+	return 0;
+}
